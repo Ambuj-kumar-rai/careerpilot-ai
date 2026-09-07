@@ -19,6 +19,7 @@ import com.careerpilot.auth.exception.EmailAlreadyExistsException;
 import com.careerpilot.auth.exception.InvalidCredentialsException;
 import com.careerpilot.auth.mapper.UserMapper;
 import com.careerpilot.auth.repository.UserRepository;
+import com.careerpilot.auth.security.JwtService;
 import com.careerpilot.auth.service.AuthService;
 
 @Service
@@ -27,11 +28,13 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final JwtService jwtService;
 
-    public AuthServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, UserMapper userMapper) {
+    public AuthServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, UserMapper userMapper, JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
+        this.jwtService = jwtService;
     }
 
     private String normalizeEmail(String email) {
@@ -69,7 +72,8 @@ public class AuthServiceImpl implements AuthService {
         if (!passwordEncoder.matches(request.password(), loggedInUser.getPasswordHash())) {
             throw new InvalidCredentialsException("Invalid email or password");
         }
-        return userMapper.toLoginResponse(loggedInUser);
+        String accessToken = jwtService.generateAccessToken(loggedInUser.getId().toString());
+        return userMapper.toLoginResponse(loggedInUser, accessToken);
     }
 
 }

@@ -8,7 +8,8 @@ public record LoginResponse(
     UUID id,
     String name,
     String email,
-    Role role
+    Role role,
+    String accessToken
 ) {
     
 }

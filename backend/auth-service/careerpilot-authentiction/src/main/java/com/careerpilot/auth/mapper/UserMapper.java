@@ -23,6 +23,7 @@ public interface UserMapper {
 
     UserResponse toResponse(User user);
 
-    LoginResponse toLoginResponse(User user);
+    @Mapping(target = "accessToken", source = "accessToken")
+    LoginResponse toLoginResponse(User user, String accessToken);
     
 }
