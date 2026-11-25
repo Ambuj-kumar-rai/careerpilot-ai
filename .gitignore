@@ -1,0 +1,15 @@
+# IntelliJ IDEA
+.idea/
+
+# VS Code
+.vscode/
+
+# Maven
+target/
+
+# Environment / secrets
+.env
+
+# Local Spring Boot configuration
+**/application.properties
+
