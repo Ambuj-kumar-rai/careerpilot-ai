@@ -31,8 +31,24 @@ public class SecurityConfig {
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, authException) -> response
                                 .sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")))
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/api/v1/auth/register", "/api/v1/auth/login")
-                        .permitAll().anyRequest().authenticated())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/error").permitAll()
+                        .requestMatchers(
+                                "/api/v1/auth/register",
+                                "/api/v1/auth/login",
+                                "/api/v1/auth/refresh",
+                                "/api/v1/auth/logout"
+                        ).permitAll()
+
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+
+                        .requestMatchers(
+                                "/api/v1/auth/logout-all",
+                                "/api/v1/auth/test"
+                        ).authenticated()
+
+                        .anyRequest().authenticated()
+                )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

@@ -21,6 +21,7 @@ import com.careerpilot.auth.mapper.UserMapper;
 import com.careerpilot.auth.repository.UserRepository;
 import com.careerpilot.auth.security.JwtService;
 import com.careerpilot.auth.service.AuthService;
+import com.careerpilot.auth.service.RefreshTokenService;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -29,12 +30,14 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
 
-    public AuthServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, UserMapper userMapper, JwtService jwtService) {
+    public AuthServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, UserMapper userMapper, JwtService jwtService, RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
         this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     private String normalizeEmail(String email) {
@@ -66,14 +69,35 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponse login(LoginRequest request) {
+
         String email = normalizeEmail(request.email());
+
         User loggedInUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
-        if (!passwordEncoder.matches(request.password(), loggedInUser.getPasswordHash())) {
+                .orElseThrow(() ->
+                        new InvalidCredentialsException("Invalid email or password"));
+
+        if (!passwordEncoder.matches(
+                request.password(),
+                loggedInUser.getPasswordHash())) {
+
             throw new InvalidCredentialsException("Invalid email or password");
         }
-        String accessToken = jwtService.generateAccessToken(loggedInUser.getId().toString());
-        return userMapper.toLoginResponse(loggedInUser, accessToken);
+
+        if (loggedInUser.getStatus() != UserStatus.ACTIVE) {
+            throw new InvalidCredentialsException("Invalid email or password");
+        }
+
+        String accessToken =
+                jwtService.generateAccessToken(loggedInUser.getId().toString());
+
+        String refreshToken =
+                refreshTokenService.createRefreshToken(loggedInUser);
+
+        return userMapper.toLoginResponse(
+                loggedInUser,
+                accessToken,
+                refreshToken
+        );
     }
 
 }

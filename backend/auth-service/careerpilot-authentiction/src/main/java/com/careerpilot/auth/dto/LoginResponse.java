@@ -9,7 +9,8 @@ public record LoginResponse(
     String name,
     String email,
     Role role,
-    String accessToken
+    String accessToken,
+    String refreshToken
 ) {
     
 }
